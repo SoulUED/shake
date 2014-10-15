@@ -1,24 +1,39 @@
 shake =
-  timeInterval: 0,
+  range: 800,
 
-  range: 5,
+  lastX: 0,
 
-  interval: 0,
+  lastY: 0,
+
+  lastZ: 0,
+
+  lastUpdate: 0,
 
   shakeIng: true,
 
   shakeHandle: (e) ->
-    rotation = e.acceleration;
-    shake.interval += e.interval;
-    if shake.interval > shake.timeInterval
-      range =  parseInt rotation.x + parseInt rotation.y + parseInt rotation.z;
-      range = Math.round(range);
-      shake.interval = 0;
+    rotation = e.accelerationIncludingGravity;
+    curlTime = new Date().getTime();
+    diffTime = curlTime - shake.lastUpdate;
 
-      if range > shake.range && shake.shakeIng
-        shake.shakeIng = false;
-        shake.callback();
-        shake.shakeIng = true;
+    if (shake.shakeIng)
+      if (diffTime > 100)
+        shake.lastUpdate = curlTime;
+        x = rotation.x;
+        y = rotation.y;
+        z = rotation.z;
+
+        speed = Math.abs(x + y + z - shake.lastX - shake.lastY - shake.lastZ);
+        speed = (speed/diffTime)*10000;
+
+        if (speed > shake.range)
+          shake.shakeIng = false;
+          console.log shake.shakeIng;
+          shake.callback();
+
+        shake.lastX = x;
+        shake.lastY = y;
+        shake.lastZ = z;
 
     return;
 
@@ -30,9 +45,15 @@ shake =
 
   removeListener: ->
     window.removeEventListener "devicemotion", @.shakeHandle, false;
-
     return;
 
+  recoverListener: ->
+    window.addEventListener "devicemotion", @.shakeHandle, false;
+
 shake.addListener ->
-  document.getElementById("X").innerText += "a:";
+  document.body.style.background = "red";
+  document.getElementById("X").innerText += "  a:aa  ";
+  setTimeout ->
+    shake.shakeIng = true;
+  , 5000;
   return;
